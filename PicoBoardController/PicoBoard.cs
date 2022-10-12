@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,20 +22,43 @@ namespace PicoBoardController
             SLIDER = 7
         }
 
-        public int[] sensorValues = new int[8] { 1,2,3,4,5,6,7,8};
+        private int[] sensorValues = new int[8] { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-        public void Connect()
+        private byte[] buffer = new byte[18];
+
+        SerialPort p = new SerialPort();
+
+        public void Connect(string portName)
         {
+            // Show all port names
+            /*foreach(string portName in SerialPort.GetPortNames())
+            {
+                Console.WriteLine(portName);
+            }*/
+            p.PortName = portName;
+            p.BaudRate = 38400;
+            p.ReadTimeout = 10;
 
+            p.Open();
         }
 
         public void Disconnect()
         {
-
+            p.Close();
         }
 
         public int ReadSensor(int SensorNumber)
         {
+            buffer[0] = 1;
+
+            // Request data packet
+            p.Write(buffer, 0, 1);
+
+            // Receive date from picoboard
+            int bytesRead = p.Read(buffer, 0, 1);
+            bytesRead += p.Read(buffer, 0, 17);
+            Console.WriteLine($"Read {bytesRead} bytes");
+
             return sensorValues[(int)SensorNumber];
         }
 
